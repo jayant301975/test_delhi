@@ -33,16 +33,19 @@
 			<thead>
 			 <tr>
 			   <td>Filter </td>
+			  
 			   <td> 
-					<select class="sexfilter form-control" name="">
-					 <option value="0">Please Select</option>
-					 <option value="male">Male</option>
-					 <option value="female">Female</option>
+					<form >
+					<select class="sexfilter form-control" name="gender" id="genderFilter"  >
+					 <option value="0" {{ request('gender') == ' ' ? 'selected' : '' }}  >Please Select</option>
+					 <option value="male" {{ request('gender') == 'male' ? 'selected' : '' }} >Male</option>
+					 <option value="female" {{ request('gender') == 'female' ? 'selected' : '' }} >Female</option>
 					</select>
 			   
-			   
+					</form>
 			   </td>
-			   <td><a href="{{route('export')}}" class="btn btn-success">Export</a></td>
+			   <td><a href="javascript:void(0)" id="exportBtn" class="btn btn-success">Export</a></td>
+			  
 			</tr>
 			<tr>
 			  <th>Id</th>
@@ -61,43 +64,44 @@
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
      <script>
-	 $(document).ready(function(){
-    // Set up CSRF token for all AJAX requests
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
-
-    // Initialize DataTable
-    $(".mytable").DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: "{{ url('/') }}",
-            type: "GET", 
-            dataType: "json",
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-        },
-        columns: [
-            { data: 'DT_RowIndex', name: 'id' },
-            { data: 'name', name: 'name' },
-			 { data: 'email', name: 'email' },
-            { data: 'gender', name: 'gender' },
-             { data: 'nationality', name: 'nationality' },
-           
-        ],
-        lengthMenu: [[10, 25, 50,100, -1], [10, 25, 50,100, "All"]],
-        pageLength: 10, // Set the default number of rows per page
-        error: function(xhr, error, thrown) {
-            console.log("DataTables error:", error, thrown);
-        }
-    });
-});
- 
+	$(".mytable").DataTable({
+			processing: true,
+			serverSide: true,
+			ajax: {
+				url: "{{ route('users.index') }}", 
+				type: "GET", 
+				data: function(d) {
+					d.gender = $('select[name=gender]').val();
+				},
+				dataType: "json",
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest',
+				},
+			},
+			columns: [
+				{ data: 'DT_RowIndex', name: 'id' },
+				{ data: 'name', name: 'name' },
+				{ data: 'email', name: 'email' },
+				{ data: 'gender', name: 'gender' },
+				{ data: 'nationality', name: 'nationality' },
+			],
+			lengthMenu: [[10, 25, 50,100, -1], [10, 25, 50,100, "All"]],
+			pageLength: 10,
+			error: function(xhr, error, thrown) {
+				console.log("DataTables error:", error, thrown);
+			}
+		});
+		
+		$('#genderFilter').on('change', function () {
+			$('.mytable').DataTable().ajax.reload();
+			 let gender = $(this).val();
+			let exportUrl = "{{ route('export') }}";
+			if (gender !== "0") {
+				exportUrl += "?gender=" + gender;
+			}
+			$('#exportBtn').attr('href', exportUrl);
+			
+		});
 	 </script>
 
 
